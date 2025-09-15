@@ -1,7 +1,6 @@
 # server.py
 import socket
-import oqs
-from oqs import kem
+import oqs # CHANGED: Import liboqs
 import threading
 from tunnel import forward_traffic
 
@@ -10,7 +9,8 @@ def handle_client(client_socket):
     try:
         # 1. Kyber Key Exchange (Server Side)
         kem_name = "Kyber768"
-        with kem.KeyEncapsulation(kem_name) as server_kem:
+        # CHANGED: New syntax for creating a KEM instance
+        with liboqs.KeyEncapsulation(kem_name) as server_kem:
             # Server generates its key pair
             public_key_server = server_kem.generate_keypair()
 
@@ -23,20 +23,15 @@ def handle_client(client_socket):
             # Server decapsulates the ciphertext to get the shared secret
             shared_secret_server = server_kem.decap_secret(ciphertext)
             print("[Server] Shared secret established.")
-            # print(f"[Server] Secret: {shared_secret_server.hex()}") # For debugging
 
         # 2. Start the tunnel
         print("[Server] Starting TCP tunnel.")
-        # For simplicity, we'll forward to a fixed target.
-        # In a real VPN, this would be determined by the client's request.
         target_host = "example.com"
         target_port = 80
 
-        # Create a new socket to connect to the target server
         target_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         target_socket.connect((target_host, target_port))
 
-        # Forward traffic in both directions
         forward_thread1 = threading.Thread(target=forward_traffic, args=(client_socket, target_socket, shared_secret_server))
         forward_thread2 = threading.Thread(target=forward_traffic, args=(target_socket, client_socket, shared_secret_server))
 

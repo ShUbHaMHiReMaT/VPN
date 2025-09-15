@@ -1,8 +1,7 @@
 # performance.py
 import time
 import psutil
-import oqs
-from oqs import kem
+import oqs # CHANGED: Import liboqs
 import json
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
@@ -14,13 +13,11 @@ def benchmark_kyber():
     cpu_usage_start = psutil.cpu_percent(interval=None)
     start_time = time.perf_counter()
 
-    with kem.KeyEncapsulation(kem_name) as client_kem:
-        with kem.KeyEncapsulation(kem_name) as server_kem:
-            # Key generation
+    # CHANGED: New syntax for KEM
+    with liboqs.KeyEncapsulation(kem_name) as client_kem:
+        with liboqs.KeyEncapsulation(kem_name) as server_kem:
             public_key = server_kem.generate_keypair()
-            # Encapsulation
             ciphertext, shared_secret_client = client_kem.encap_secret(public_key)
-            # Decapsulation
             shared_secret_server = server_kem.decap_secret(ciphertext)
 
     end_time = time.perf_counter()
@@ -39,18 +36,11 @@ def benchmark_ecdh():
     cpu_usage_start = psutil.cpu_percent(interval=None)
     start_time = time.perf_counter()
 
-    # 1. Server generates its key pair
     server_private_key = ec.generate_private_key(ec.SECP384R1())
     server_public_key = server_private_key.public_key()
-
-    # 2. Client generates its key pair
     client_private_key = ec.generate_private_key(ec.SECP384R1())
     client_public_key = client_private_key.public_key()
-
-    # 3. Server computes shared key
     shared_key_server = server_private_key.exchange(ec.ECDH(), client_public_key)
-
-    # 4. Client computes shared key
     shared_key_client = client_private_key.exchange(ec.ECDH(), server_public_key)
     
     end_time = time.perf_counter()
