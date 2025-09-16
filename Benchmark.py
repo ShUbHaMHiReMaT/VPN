@@ -1,7 +1,7 @@
 # performance.py
 import time
 import psutil
-import oqs # CHANGED: Import liboqs
+import liboqs # CHANGED: Import liboqs
 import json
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization

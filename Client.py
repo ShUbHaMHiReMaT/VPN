@@ -1,6 +1,6 @@
 # client.py
 import socket
-import oqs # CHANGED: Import liboqs
+import liboqs 
 import threading
 from tunnel import forward_traffic
 
@@ -46,13 +46,19 @@ def main():
             server_socket_thread.connect((server_host, server_port))
             print(f"[Client] Connected to VPN server at {server_host}:{server_port}")
 
-            # Perform key exchange for the new connection
-            # CHANGED: New syntax for KEM
-            with liboqs.KeyEncapsulation(kem_name) as client_kem:
-                public_key_server = server_socket_thread.recv(client_kem.details['length_public_key'])
-                ciphertext, shared_secret_client = client_kem.encap_secret(public_key_server)
-                server_socket_thread.sendall(ciphertext)
-                print("[Client] Shared secret established.")
+            # --- NECESSARY CHANGES START HERE ---
+            # Create a KEM object using the new syntax
+            kem = liboqs.KEM(kem_name)
+
+            # Client receives the server's public key
+            public_key_server = server_socket_thread.recv(kem.details['length_public_key'])
+            
+            # The encapsulate() method is called on the KEM object
+            ciphertext, shared_secret_client = kem.encapsulate(public_key_server)
+            
+            server_socket_thread.sendall(ciphertext)
+            print("[Client] Shared secret established.")
+            # --- NECESSARY CHANGES END HERE ---
 
             handler = threading.Thread(target=handle_local_connection, args=(local_conn, server_socket_thread, shared_secret_client))
             handler.start()

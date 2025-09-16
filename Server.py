@@ -1,6 +1,6 @@
 # server.py
 import socket
-import oqs # CHANGED: Import liboqs
+import liboqs 
 import threading
 from tunnel import forward_traffic
 
@@ -9,20 +9,24 @@ def handle_client(client_socket):
     try:
         # 1. Kyber Key Exchange (Server Side)
         kem_name = "Kyber768"
-        # CHANGED: New syntax for creating a KEM instance
-        with liboqs.KeyEncapsulation(kem_name) as server_kem:
-            # Server generates its key pair
-            public_key_server = server_kem.generate_keypair()
 
-            # Server sends its public key to the client
-            client_socket.sendall(public_key_server)
+        # --- NECESSARY CHANGES START HERE ---
+        # Create a KEM object using the new syntax
+        kem = liboqs.KEM(kem_name)
 
-            # Server receives the ciphertext from the client
-            ciphertext = client_socket.recv(server_kem.details['length_ciphertext'])
+        # The keypair() method now generates both public and secret keys
+        public_key_server, secret_key_server = kem.keypair()
 
-            # Server decapsulates the ciphertext to get the shared secret
-            shared_secret_server = server_kem.decap_secret(ciphertext)
-            print("[Server] Shared secret established.")
+        # Server sends its public key to the client
+        client_socket.sendall(public_key_server)
+
+        # Server receives the ciphertext from the client
+        ciphertext = client_socket.recv(kem.details['length_ciphertext'])
+
+        # The decapsulate() method now requires the secret key
+        shared_secret_server = kem.decapsulate(secret_key_server, ciphertext)
+        print("[Server] Shared secret established.")
+        # --- NECESSARY CHANGES END HERE ---
 
         # 2. Start the tunnel
         print("[Server] Starting TCP tunnel.")
