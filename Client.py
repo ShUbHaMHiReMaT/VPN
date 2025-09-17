@@ -1,6 +1,6 @@
 # client.py
 import socket
-import liboqs 
+import oqs 
 import threading
 from tunnel import forward_traffic
 
@@ -48,7 +48,7 @@ def main():
 
             # --- NECESSARY CHANGES START HERE ---
             # Create a KEM object using the new syntax
-            kem = liboqs.KEM(kem_name)
+            kem = oqs.KeyEncapsulation(kem_name)
 
             # Client receives the server's public key
             public_key_server = server_socket_thread.recv(kem.details['length_public_key'])

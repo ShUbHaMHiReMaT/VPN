@@ -1,7 +1,7 @@
 # performance.py
 import time
 import psutil
-import liboqs # CHANGED: Import liboqs
+import oqs # CHANGED: Import oqs
 import json
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives import serialization
@@ -14,8 +14,8 @@ def benchmark_kyber():
     start_time = time.perf_counter()
 
     # CHANGED: New syntax for KEM
-    with liboqs.KeyEncapsulation(kem_name) as client_kem:
-        with liboqs.KeyEncapsulation(kem_name) as server_kem:
+    with oqs.KeyEncapsulation(kem_name) as client_kem:
+        with oqs.KeyEncapsulation(kem_name) as server_kem:
             public_key = server_kem.generate_keypair()
             ciphertext, shared_secret_client = client_kem.encap_secret(public_key)
             shared_secret_server = server_kem.decap_secret(ciphertext)
